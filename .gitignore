@@ -40,6 +40,9 @@ Makefile.in
 /desmume/src/frontend/cocoa/openemu/OpenEmuBase.framework/
 /desmume/src/frontend/cocoa/OptimizationProfiles/
 
+#vscode
+.vscode/
+
 # Xcode
 
 ## Build generated

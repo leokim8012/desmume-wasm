@@ -20,27 +20,28 @@
 #include <string.h>
 #include "types.h"
 
+#define DESMUME_COCOA
 #if defined(HOST_WINDOWS)
-	#define WIN32_LEAN_AND_MEAN
-	#include <windows.h>
-	#include <direct.h>
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
+#include <direct.h>
 
-		#include "frontend/windows/winutil.h"
-		#include "frontend/windows/resource.h"
+#include "frontend/windows/winutil.h"
+#include "frontend/windows/resource.h"
 #elif !defined(DESMUME_COCOA)
-	#include <glib.h>
+#include <glib.h>
 #endif /* HOST_WINDOWS */
 
 #include "time.h"
 
 #ifdef HOST_WINDOWS
-	#define FILE_EXT_DELIMITER_CHAR		'.'
-	#define DIRECTORY_DELIMITER_CHAR	'\\'
-	#define ALL_DIRECTORY_DELIMITER_STRING "/\\"
+#define FILE_EXT_DELIMITER_CHAR '.'
+#define DIRECTORY_DELIMITER_CHAR '\\'
+#define ALL_DIRECTORY_DELIMITER_STRING "/\\"
 #else
-	#define FILE_EXT_DELIMITER_CHAR		'.'
-	#define DIRECTORY_DELIMITER_CHAR	'/'
-	#define ALL_DIRECTORY_DELIMITER_STRING "/"
+#define FILE_EXT_DELIMITER_CHAR '.'
+#define DIRECTORY_DELIMITER_CHAR '/'
+#define ALL_DIRECTORY_DELIMITER_STRING "/"
 #endif
 
 #ifdef HOST_WINDOWS
@@ -50,7 +51,7 @@ void FCEUD_MakePathDirs(const char *fname);
 class Path
 {
 public:
-	static bool IsPathRooted (const std::string &path);
+	static bool IsPathRooted(const std::string &path);
 	static std::string GetFileDirectoryPath(std::string filePath);
 	static std::string GetFileNameFromPath(std::string filePath);
 	static std::string ScrubInvalid(std::string str);
@@ -62,32 +63,31 @@ public:
 class PathInfo
 {
 public:
-
 	std::string path;
 	std::string RomName;
 	std::string RomDirectory;
 
-	#define MAX_FORMAT		20
-	#define SECTION			"PathSettings"
-	#define LSECTION			L"PathSettings"
+#define MAX_FORMAT 20
+#define SECTION "PathSettings"
+#define LSECTION L"PathSettings"
 
-	#define ROMKEY			L"Roms"
-	#define BATTERYKEY		L"Battery"
-	#define SRAMIMPORTKEY	L"SramImportExport"
-	#define STATEKEY		L"States"
-	#define STATESLOTKEY	L"StateSlots"
-	#define SCREENSHOTKEY	L"Screenshots"
-	#define AVIKEY			L"AviFiles"
-	#define CHEATKEY		L"Cheats"
-	#define R4FORMATKEY		"R4format"
-	#define SOUNDKEY		L"SoundSamples"
-	#define FIRMWAREKEY		L"Firmware"
-	#define FORMATKEY		"format"
-	#define DEFAULTFORMATKEY "defaultFormat"
-	#define NEEDSSAVINGKEY	"needsSaving"
-	#define LASTVISITKEY	"lastVisit"
-	#define LUAKEY			L"Lua"
-	#define SLOT1DKEY		L"Slot1D"
+#define ROMKEY L"Roms"
+#define BATTERYKEY L"Battery"
+#define SRAMIMPORTKEY L"SramImportExport"
+#define STATEKEY L"States"
+#define STATESLOTKEY L"StateSlots"
+#define SCREENSHOTKEY L"Screenshots"
+#define AVIKEY L"AviFiles"
+#define CHEATKEY L"Cheats"
+#define R4FORMATKEY "R4format"
+#define SOUNDKEY L"SoundSamples"
+#define FIRMWAREKEY L"Firmware"
+#define FORMATKEY "format"
+#define DEFAULTFORMATKEY "defaultFormat"
+#define NEEDSSAVINGKEY "needsSaving"
+#define LASTVISITKEY "lastVisit"
+#define LUAKEY L"Lua"
+#define SLOT1DKEY L"Slot1D"
 	char screenshotFormat[MAX_FORMAT];
 	bool savelastromvisit;
 
@@ -109,21 +109,21 @@ public:
 		MAXKNOWNPATH = MODULE
 	};
 
-	//ALL UTF8, NOT SYSTEM LOCALE!! BLEGH!
-	//should probably have set locale to utf-8 but it's too late for that
-	char pathToRoms[MAX_PATH*8];
-	char pathToBattery[MAX_PATH*8];
-	char pathToSramImportExport[MAX_PATH*8];
-	char pathToStates[MAX_PATH*8];
-	char pathToStateSlots[MAX_PATH*8];
-	char pathToScreenshots[MAX_PATH*8];
-	char pathToAviFiles[MAX_PATH*8];
-	char pathToCheats[MAX_PATH*8];
-	char pathToSounds[MAX_PATH*8];
-	char pathToFirmware[MAX_PATH*8];
-	char pathToModule[MAX_PATH*8];
-	char pathToLua[MAX_PATH*8];
-	char pathToSlot1D[MAX_PATH*8];
+	// ALL UTF8, NOT SYSTEM LOCALE!! BLEGH!
+	// should probably have set locale to utf-8 but it's too late for that
+	char pathToRoms[MAX_PATH * 8];
+	char pathToBattery[MAX_PATH * 8];
+	char pathToSramImportExport[MAX_PATH * 8];
+	char pathToStates[MAX_PATH * 8];
+	char pathToStateSlots[MAX_PATH * 8];
+	char pathToScreenshots[MAX_PATH * 8];
+	char pathToAviFiles[MAX_PATH * 8];
+	char pathToCheats[MAX_PATH * 8];
+	char pathToSounds[MAX_PATH * 8];
+	char pathToFirmware[MAX_PATH * 8];
+	char pathToModule[MAX_PATH * 8];
+	char pathToLua[MAX_PATH * 8];
+	char pathToSlot1D[MAX_PATH * 8];
 
 	void init(const char *filename);
 
@@ -187,4 +187,3 @@ public:
 };
 
 extern PathInfo path;
-

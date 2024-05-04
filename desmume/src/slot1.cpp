@@ -24,7 +24,7 @@ Since GCROMCTRL[26:24] can't represent 'data block size' of 1 or 2, it is assume
 ...so, any 8/16bit accesses to GCDATAIN would transfer a whole 32bit unit and then just return the requested portion
 */
 
-//TODO - create a Slot1_TurboRom which we can select when booting from fakebios/nonfirmware and which would provide a useful service to people porting to tighter platforms by bypassing largely useless cruft
+// TODO - create a Slot1_TurboRom which we can select when booting from fakebios/nonfirmware and which would provide a useful service to people porting to tighter platforms by bypassing largely useless cruft
 
 #include <string>
 
@@ -39,14 +39,15 @@ Since GCROMCTRL[26:24] can't represent 'data block size' of 1 or 2, it is assume
 bool slot1_R4_path_type = false;
 
 //-------
-//fat-related common elements
-static EMUFILE* fatImage = NULL;
+// fat-related common elements
+static EMUFILE *fatImage = NULL;
 static std::string fatDir;
 
 static void scanDir()
 {
-	if(fatDir == "" && !slot1_R4_path_type) return;
-	
+	if (fatDir == "" && !slot1_R4_path_type)
+		return;
+
 	if (fatImage)
 	{
 		delete fatImage;
@@ -54,16 +55,15 @@ static void scanDir()
 	}
 
 	VFAT vfat;
-	if(vfat.build(slot1_R4_path_type?path.RomDirectory.c_str():fatDir.c_str(), 16))
+	if (vfat.build(slot1_R4_path_type ? path.RomDirectory.c_str() : fatDir.c_str(), 16))
 	{
 		fatImage = vfat.detach();
 	}
 }
 
-
-void slot1_SetFatDir(const std::string& dir, bool sameAsRom)
+void slot1_SetFatDir(const std::string &dir, bool sameAsRom)
 {
-	//printf("FAT path %s\n", dir.c_str());
+	// printf("FAT path %s\n", dir.c_str());
 	slot1_R4_path_type = sameAsRom;
 	if (!slot1_R4_path_type)
 		fatDir = dir;
@@ -74,28 +74,28 @@ std::string slot1_GetFatDir()
 	return fatDir;
 }
 
-EMUFILE* slot1_GetFatImage()
+EMUFILE *slot1_GetFatImage()
 {
 	return fatImage;
 }
 
 //------------
 
-ISlot1Interface* slot1_List[NDS_SLOT1_COUNT] = {0};
+ISlot1Interface *slot1_List[NDS_SLOT1_COUNT] = {0};
 
-ISlot1Interface* slot1_device = NULL;
-NDS_SLOT1_TYPE slot1_device_type = NDS_SLOT1_RETAIL_AUTO;  //default for frontends that dont even configure this
+ISlot1Interface *slot1_device = NULL;
+NDS_SLOT1_TYPE slot1_device_type = NDS_SLOT1_RETAIL_AUTO; // default for frontends that dont even configure this
 NDS_SLOT1_TYPE slot1_selected_type = NDS_SLOT1_NONE;
-
 
 void slot1_Init()
 {
-	//due to sloppy initialization code in various untestable desmume ports, we might try this more than once
+	// due to sloppy initialization code in various untestable desmume ports, we might try this more than once
 	static bool initialized = false;
-	if(initialized) return;
+	if (initialized)
+		return;
 	initialized = true;
 
-	//construct all devices
+	// construct all devices
 	extern TISlot1InterfaceConstructor construct_Slot1_None;
 	extern TISlot1InterfaceConstructor construct_Slot1_Retail_Auto;
 	extern TISlot1InterfaceConstructor construct_Slot1_R4;
@@ -104,17 +104,17 @@ void slot1_Init()
 	extern TISlot1InterfaceConstructor construct_Slot1_Retail_DEBUG;
 	slot1_List[NDS_SLOT1_NONE] = construct_Slot1_None();
 	slot1_List[NDS_SLOT1_RETAIL_AUTO] = construct_Slot1_Retail_Auto();
-	slot1_List[NDS_SLOT1_R4] = construct_Slot1_R4();
+	// slot1_List[NDS_SLOT1_R4] = construct_Slot1_R4();
 	slot1_List[NDS_SLOT1_RETAIL_NAND] = construct_Slot1_Retail_NAND();
 	slot1_List[NDS_SLOT1_RETAIL_MCROM] = construct_Slot1_Retail_MCROM();
-	slot1_List[NDS_SLOT1_RETAIL_DEBUG] = construct_Slot1_Retail_DEBUG();
+	// slot1_List[NDS_SLOT1_RETAIL_DEBUG] = construct_Slot1_Retail_DEBUG();
 }
 
 void slot1_Shutdown()
 {
 	for (size_t i = 0; i < ARRAY_SIZE(slot1_List); i++)
 	{
-		if(slot1_List[i])
+		if (slot1_List[i])
 			slot1_List[i]->shutdown();
 		delete slot1_List[i];
 	}
@@ -129,8 +129,8 @@ bool slot1_Connect()
 void slot1_Disconnect()
 {
 	slot1_device->disconnect();
-	
-	//be careful to do this second, maybe the device will write something more
+
+	// be careful to do this second, maybe the device will write something more
 	if (fatImage)
 	{
 		delete fatImage;
@@ -140,10 +140,11 @@ void slot1_Disconnect()
 
 void slot1_Reset()
 {
-	//disconnect existing device
-	if(slot1_device != NULL) slot1_device->disconnect();
-	
-	//connect new device
+	// disconnect existing device
+	if (slot1_device != NULL)
+		slot1_device->disconnect();
+
+	// connect new device
 	slot1_device = slot1_List[slot1_device_type];
 	if (slot1_device_type == NDS_SLOT1_R4)
 		scanDir();
@@ -152,22 +153,22 @@ void slot1_Reset()
 
 bool slot1_Change(NDS_SLOT1_TYPE changeToType)
 {
-	if ( (changeToType == slot1_device_type) || (changeToType == slot1_GetSelectedType()) )
-		return false; //nothing to do
-	
-	if ( (changeToType >= NDS_SLOT1_COUNT) || (changeToType < 0) )
+	if ((changeToType == slot1_device_type) || (changeToType == slot1_GetSelectedType()))
+		return false; // nothing to do
+
+	if ((changeToType >= NDS_SLOT1_COUNT) || (changeToType < 0))
 		return false;
-	
+
 	if (slot1_device != NULL)
 		slot1_device->disconnect();
-	
+
 	slot1_device_type = changeToType;
 	slot1_device = slot1_List[slot1_device_type];
 	printf("Slot 1: %s\n", slot1_device->info()->name());
 	printf("sending eject signal to SLOT-1\n");
 	NDS_TriggerCardEjectIRQ();
 	slot1_device->connect();
-	
+
 	return true;
 }
 
@@ -212,116 +213,112 @@ void slot1_Loadstate(EMUFILE &is)
 	slot1_device->loadstate(is);
 }
 
-	//// --- Ninja SD commands notes -------------------------------------
-	//		///writetoGCControl:
+//// --- Ninja SD commands notes -------------------------------------
+//		///writetoGCControl:
 
-	//	// NJSD init/reset
-	//	case 0x20:
-	//		{
-	//			card.address = 0;
-	//			card.transfer_count = 0;
-	//		}
-	//		break;
+//	// NJSD init/reset
+//	case 0x20:
+//		{
+//			card.address = 0;
+//			card.transfer_count = 0;
+//		}
+//		break;
 
-	//	// NJSD_sendCLK()
-	//	case 0xE0:
-	//		{
-	//			card.address = 0;
-	//			card.transfer_count = 0;
-	//			NDS_makeInt(PROCNUM, 20);
-	//		}
-	//		break;
+//	// NJSD_sendCLK()
+//	case 0xE0:
+//		{
+//			card.address = 0;
+//			card.transfer_count = 0;
+//			NDS_makeInt(PROCNUM, 20);
+//		}
+//		break;
 
-	//	// NJSD_sendCMDN() / NJSD_sendCMDR()
-	//	case 0xF0:
-	//	case 0xF1:
-	//		switch (card.command[2])
-	//		{
-	//		// GO_IDLE_STATE
-	//		case 0x40:
-	//			card.address = 0;
-	//			card.transfer_count = 0;
-	//			NDS_makeInt(PROCNUM, 20);
-	//			break;
+//	// NJSD_sendCMDN() / NJSD_sendCMDR()
+//	case 0xF0:
+//	case 0xF1:
+//		switch (card.command[2])
+//		{
+//		// GO_IDLE_STATE
+//		case 0x40:
+//			card.address = 0;
+//			card.transfer_count = 0;
+//			NDS_makeInt(PROCNUM, 20);
+//			break;
 
-	//		case 0x42:  // ALL_SEND_CID
-	//		case 0x43:  // SEND_RELATIVE_ADDR
-	//		case 0x47:  // SELECT_CARD
-	//		case 0x49:  // SEND_CSD
-	//		case 0x4D:
-	//		case 0x77:  // APP_CMD
-	//		case 0x69:  // SD_APP_OP_COND
-	//			card.address = 0;
-	//			card.transfer_count = 6;
-	//			NDS_makeInt(PROCNUM, 20);
-	//			break;
+//		case 0x42:  // ALL_SEND_CID
+//		case 0x43:  // SEND_RELATIVE_ADDR
+//		case 0x47:  // SELECT_CARD
+//		case 0x49:  // SEND_CSD
+//		case 0x4D:
+//		case 0x77:  // APP_CMD
+//		case 0x69:  // SD_APP_OP_COND
+//			card.address = 0;
+//			card.transfer_count = 6;
+//			NDS_makeInt(PROCNUM, 20);
+//			break;
 
-	//		// SET_BLOCKLEN
-	//		case 0x50:
-	//			card.address = 0;
-	//			card.transfer_count = 6;
-	//			card.blocklen = card.command[6] | (card.command[5] << 8) | (card.command[4] << 16) | (card.command[3] << 24);
-	//			NDS_makeInt(PROCNUM, 20);
-	//			break;
+//		// SET_BLOCKLEN
+//		case 0x50:
+//			card.address = 0;
+//			card.transfer_count = 6;
+//			card.blocklen = card.command[6] | (card.command[5] << 8) | (card.command[4] << 16) | (card.command[3] << 24);
+//			NDS_makeInt(PROCNUM, 20);
+//			break;
 
-	//		// READ_SINGLE_BLOCK
-	//		case 0x51:
-	//			card.address = card.command[6] | (card.command[5] << 8) | (card.command[4] << 16) | (card.command[3] << 24);
-	//			card.transfer_count = (card.blocklen + 3) >> 2;
-	//			NDS_makeInt(PROCNUM, 20);
-	//			break;
-	//		}
-	//		break;
+//		// READ_SINGLE_BLOCK
+//		case 0x51:
+//			card.address = card.command[6] | (card.command[5] << 8) | (card.command[4] << 16) | (card.command[3] << 24);
+//			card.transfer_count = (card.blocklen + 3) >> 2;
+//			NDS_makeInt(PROCNUM, 20);
+//			break;
+//		}
+//		break;
 
-	//	// --- Ninja SD commands end ---------------------------------
+//	// --- Ninja SD commands end ---------------------------------
 
+//		//GCDATAIN:
+//	// --- Ninja SD commands -------------------------------------
 
+//	// NJSD_sendCMDN() / NJSD_sendCMDR()
+//	case 0xF0:
+//	case 0xF1:
+//		switch (card.command[2])
+//		{
+//		// ALL_SEND_CID
+//		case 0x42:
+//			if (card.transfer_count == 2) val = 0x44534A4E;
+//			else val = 0x00000000;
 
-	//		//GCDATAIN:
-	//	// --- Ninja SD commands -------------------------------------
+//		// SEND_RELATIVE_ADDR
+//		case 0x43:
+//		case 0x47:
+//		case 0x49:
+//		case 0x50:
+//			val = 0x00000000;
+//			break;
 
-	//	// NJSD_sendCMDN() / NJSD_sendCMDR()
-	//	case 0xF0:
-	//	case 0xF1:
-	//		switch (card.command[2])
-	//		{
-	//		// ALL_SEND_CID
-	//		case 0x42:
-	//			if (card.transfer_count == 2) val = 0x44534A4E;
-	//			else val = 0x00000000;
+//		case 0x4D:
+//			if (card.transfer_count == 2) val = 0x09000000;
+//			else val = 0x00000000;
+//			break;
 
-	//		// SEND_RELATIVE_ADDR
-	//		case 0x43:
-	//		case 0x47:
-	//		case 0x49:
-	//		case 0x50:
-	//			val = 0x00000000;
-	//			break;
+//		// APP_CMD
+//		case 0x77:
+//			if (card.transfer_count == 2) val = 0x00000037;
+//			else val = 0x00000000;
+//			break;
 
-	//		case 0x4D:
-	//			if (card.transfer_count == 2) val = 0x09000000;
-	//			else val = 0x00000000;
-	//			break;
+//		// SD_APP_OP_COND
+//		case 0x69:
+//			if (card.transfer_count == 2) val = 0x00008000;
+//			else val = 0x00000000;
+//			break;
 
-	//		// APP_CMD
-	//		case 0x77:
-	//			if (card.transfer_count == 2) val = 0x00000037;
-	//			else val = 0x00000000;
-	//			break;
+//		// READ_SINGLE_BLOCK
+//		case 0x51:
+//			val = 0x00000000;
+//			break;
+//		}
+//		break;
 
-	//		// SD_APP_OP_COND
-	//		case 0x69:
-	//			if (card.transfer_count == 2) val = 0x00008000;
-	//			else val = 0x00000000;
-	//			break;
-
-	//		// READ_SINGLE_BLOCK
-	//		case 0x51:
-	//			val = 0x00000000;
-	//			break;
-	//		}
-	//		break;
-
-	//	// --- Ninja SD commands end ---------------------------------
-
-
+//	// --- Ninja SD commands end ---------------------------------

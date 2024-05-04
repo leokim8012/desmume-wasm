@@ -22,32 +22,32 @@
 #include "registers.h"
 #include "NDSSystem.h"
 
-//this is the currently-configured cflash mode
+// this is the currently-configured cflash mode
 ADDON_CFLASH_MODE CFlash_Mode = ADDON_CFLASH_MODE_RomPath;
 
-//this is the currently-configured path (directory or filename) for cflash.
-//it should be viewed as a parameter for the above.
+// this is the currently-configured path (directory or filename) for cflash.
+// it should be viewed as a parameter for the above.
 std::string CFlash_Path;
 
 // GBA file paths for cartridge and SRAM
 std::string GBACartridge_RomPath;
 std::string GBACartridge_SRAMPath;
 
-ISlot2Interface* slot2_List[NDS_SLOT2_COUNT] = {0};
+ISlot2Interface *slot2_List[NDS_SLOT2_COUNT] = {0};
 
-ISlot2Interface* slot2_device = NULL;
+ISlot2Interface *slot2_device = NULL;
 NDS_SLOT2_TYPE slot2_device_type = NDS_SLOT2_AUTO;
 NDS_SLOT2_TYPE slot2_selected_type = NDS_SLOT2_NONE;
 
-
 void slot2_Init()
 {
-	//due to sloppy initialization code in various untestable desmume ports, we might try this more than once
+	// due to sloppy initialization code in various untestable desmume ports, we might try this more than once
 	static bool initialized = false;
-	if(initialized) return;
+	if (initialized)
+		return;
 	initialized = true;
 
-	//construct all devices
+	// construct all devices
 	extern TISlot2InterfaceConstructor construct_Slot2_None;
 	extern TISlot2InterfaceConstructor construct_Slot2_Auto;
 	extern TISlot2InterfaceConstructor construct_Slot2_CFlash;
@@ -60,7 +60,8 @@ void slot2_Init()
 	extern TISlot2InterfaceConstructor construct_Slot2_PassME;
 	extern TISlot2InterfaceConstructor construct_Slot2_HCV1000;
 
-	slot2_List[NDS_SLOT2_NONE]			= construct_Slot2_None();
+	slot2_List[NDS_SLOT2_NONE] = construct_Slot2_None();
+#if 0
 	slot2_List[NDS_SLOT2_AUTO]			= construct_Slot2_Auto();
 	slot2_List[NDS_SLOT2_CFLASH]		= construct_Slot2_CFlash();
 	slot2_List[NDS_SLOT2_RUMBLEPAK]		= construct_Slot2_RumblePak();
@@ -71,14 +72,14 @@ void slot2_Init()
 	slot2_List[NDS_SLOT2_PADDLE]		= construct_Slot2_Paddle();
 	slot2_List[NDS_SLOT2_PASSME]		= construct_Slot2_PassME();
 	slot2_List[NDS_SLOT2_HCV1000]		= construct_Slot2_HCV1000();
-
+#endif
 }
 
 void slot2_Shutdown()
 {
-	for(size_t i=0; i<ARRAY_SIZE(slot2_List); i++)
+	for (size_t i = 0; i < ARRAY_SIZE(slot2_List); i++)
 	{
-		if(slot2_List[i])
+		if (slot2_List[i])
 			slot2_List[i]->shutdown();
 		delete slot2_List[i];
 		slot2_List[i] = NULL;
@@ -98,10 +99,11 @@ void slot2_Disconnect()
 
 void slot2_Reset()
 {
-	//disconnect existing device
-	if(slot2_device != NULL) slot2_device->disconnect();
-	
-	//connect new device
+	// disconnect existing device
+	if (slot2_device != NULL)
+		slot2_device->disconnect();
+
+	// connect new device
 	slot2_device = slot2_List[slot2_device_type];
 	slot2_device->connect();
 }
@@ -110,7 +112,7 @@ bool slot2_Change(NDS_SLOT2_TYPE changeToType)
 {
 	if (changeToType >= NDS_SLOT2_COUNT || changeToType < 0)
 		return false;
-	
+
 	if (slot2_device_type == changeToType)
 	{
 		return false;
@@ -119,15 +121,15 @@ bool slot2_Change(NDS_SLOT2_TYPE changeToType)
 	{
 		const NDS_SLOT2_TYPE prevDeviceType = slot2_device_type;
 		const NDS_SLOT2_TYPE autoDeviceType = slot2_DetermineType();
-		
+
 		if (prevDeviceType != autoDeviceType && slot2_device != NULL)
 		{
 			slot2_device->disconnect();
 		}
-		
+
 		slot2_setDeviceByType(changeToType);
 		slot2_selected_type = autoDeviceType;
-		
+
 		if (prevDeviceType != autoDeviceType)
 		{
 			slot2_device->connect();
@@ -136,14 +138,14 @@ bool slot2_Change(NDS_SLOT2_TYPE changeToType)
 	else if (slot2_device_type == NDS_SLOT2_AUTO && changeToType != NDS_SLOT2_AUTO)
 	{
 		const NDS_SLOT2_TYPE autoDeviceType = slot2_DetermineType();
-		
+
 		if (autoDeviceType != changeToType && slot2_device != NULL)
 		{
 			slot2_device->disconnect();
 		}
-		
+
 		slot2_setDeviceByType(changeToType);
-		
+
 		if (autoDeviceType != changeToType)
 		{
 			slot2_device->connect();
@@ -155,11 +157,11 @@ bool slot2_Change(NDS_SLOT2_TYPE changeToType)
 		{
 			slot2_device->disconnect();
 		}
-		
+
 		slot2_setDeviceByType(changeToType);
 		slot2_device->connect();
 	}
-	
+
 	return true;
 }
 
@@ -169,7 +171,7 @@ void slot2_setDeviceByType(NDS_SLOT2_TYPE theType)
 	{
 		return;
 	}
-	
+
 	slot2_device_type = theType;
 	slot2_device = slot2_List[slot2_device_type];
 	printf("Slot 2: %s\n", slot2_device->info()->name());
@@ -211,8 +213,8 @@ NDS_SLOT2_TYPE slot2_GetSelectedType()
 NDS_SLOT2_TYPE slot2_DetermineType()
 {
 	NDS_SLOT2_TYPE theType = NDS_SLOT2_NONE;
-	
-	//check game ID in core emulator and select right implementation
+
+	// check game ID in core emulator and select right implementation
 	if (gameInfo.romsize == 0)
 	{
 		return theType;
@@ -225,49 +227,49 @@ NDS_SLOT2_TYPE slot2_DetermineType()
 	{
 		theType = slot2_DetermineTypeByGameCode(gameInfo.header.gameCode);
 	}
-	
+
 	return theType;
 }
 
 NDS_SLOT2_TYPE slot2_DetermineTypeByGameCode(const char *theGameCode)
 {
 	NDS_SLOT2_TYPE theType = NDS_SLOT2_NONE;
-	
+
 	struct Slot2AutoDeviceType
 	{
-		const char				*gameCode;
-		const NDS_SLOT2_TYPE	deviceType;
+		const char *gameCode;
+		const NDS_SLOT2_TYPE deviceType;
 	};
-	
+
 	static const Slot2AutoDeviceType gameCodeDeviceTypes[] = {
-		{"UBR", NDS_SLOT2_EXPMEMORY},		// Opera Browser
-		{"YGH", NDS_SLOT2_GUITARGRIP},		// Guitar Hero - On Tour
-		{"CGS", NDS_SLOT2_GUITARGRIP},		// Guitar Hero - On Tour - Decades
-		{"C6Q", NDS_SLOT2_GUITARGRIP},		// Guitar Hero - On Tour - Modern Hits
-		{"YGR", NDS_SLOT2_GUITARGRIP},		// Guitar Hero - On Tour (Demo)
-		{"Y56", NDS_SLOT2_GUITARGRIP},		// Guitar Hero - On Tour - Decades (Demo)
-		{"Y6R", NDS_SLOT2_GUITARGRIP},		// Guitar Hero - On Tour - Modern Hits (Demo)
-		{"BEP", NDS_SLOT2_EASYPIANO},		// Easy Piano (EUR)(USA)
-		{"YAA", NDS_SLOT2_PADDLE},			// Arkanoid DS
-		{"CB6", NDS_SLOT2_PADDLE},			// Space Bust-A-Move
-		{"YXX", NDS_SLOT2_PADDLE},			// Space Invaders Extreme
-		{"CV8", NDS_SLOT2_PADDLE},			// Space Invaders Extreme 2
-		{"AMH", NDS_SLOT2_RUMBLEPAK},		// Metroid Prime Hunters
-		{"AP2", NDS_SLOT2_RUMBLEPAK},		// Metroid Prime Pinball
-		{"C4A", NDS_SLOT2_HCV1000},			// Card de Asobu! Hajimete no DS
-		{"A6I", NDS_SLOT2_HCV1000},			// Kouchuu Ouja: Mushi King Super Collection
-		{"ALB", NDS_SLOT2_HCV1000},			// Oshare Majo Berry and Love
+		{"UBR", NDS_SLOT2_EXPMEMORY},  // Opera Browser
+		{"YGH", NDS_SLOT2_GUITARGRIP}, // Guitar Hero - On Tour
+		{"CGS", NDS_SLOT2_GUITARGRIP}, // Guitar Hero - On Tour - Decades
+		{"C6Q", NDS_SLOT2_GUITARGRIP}, // Guitar Hero - On Tour - Modern Hits
+		{"YGR", NDS_SLOT2_GUITARGRIP}, // Guitar Hero - On Tour (Demo)
+		{"Y56", NDS_SLOT2_GUITARGRIP}, // Guitar Hero - On Tour - Decades (Demo)
+		{"Y6R", NDS_SLOT2_GUITARGRIP}, // Guitar Hero - On Tour - Modern Hits (Demo)
+		{"BEP", NDS_SLOT2_EASYPIANO},  // Easy Piano (EUR)(USA)
+		{"YAA", NDS_SLOT2_PADDLE},	   // Arkanoid DS
+		{"CB6", NDS_SLOT2_PADDLE},	   // Space Bust-A-Move
+		{"YXX", NDS_SLOT2_PADDLE},	   // Space Invaders Extreme
+		{"CV8", NDS_SLOT2_PADDLE},	   // Space Invaders Extreme 2
+		{"AMH", NDS_SLOT2_RUMBLEPAK},  // Metroid Prime Hunters
+		{"AP2", NDS_SLOT2_RUMBLEPAK},  // Metroid Prime Pinball
+		{"C4A", NDS_SLOT2_HCV1000},	   // Card de Asobu! Hajimete no DS
+		{"A6I", NDS_SLOT2_HCV1000},	   // Kouchuu Ouja: Mushi King Super Collection
+		{"ALB", NDS_SLOT2_HCV1000},	   // Oshare Majo Berry and Love
 	};
-	
-	for(size_t i = 0; i < ARRAY_SIZE(gameCodeDeviceTypes); i++)
+
+	for (size_t i = 0; i < ARRAY_SIZE(gameCodeDeviceTypes); i++)
 	{
-		if(memcmp(theGameCode, gameCodeDeviceTypes[i].gameCode, 3) == 0)
+		if (memcmp(theGameCode, gameCodeDeviceTypes[i].gameCode, 3) == 0)
 		{
 			theType = gameCodeDeviceTypes[i].deviceType;
 			break;
 		}
 	}
-	
+
 	return theType;
 }
 
@@ -283,9 +285,11 @@ void slot2_Loadstate(EMUFILE &is)
 
 static bool isSlot2(u32 addr)
 {
-	if (addr < 0x08000000) return false;
-	if (addr >= 0x0A010000) return false;
-	
+	if (addr < 0x08000000)
+		return false;
+	if (addr >= 0x0A010000)
+		return false;
+
 	return true;
 }
 
@@ -293,21 +297,28 @@ template <u8 PROCNUM>
 static bool skipSlot2Data()
 {
 	u16 exmemcnt = T1ReadWord(MMU.MMU_MEM[PROCNUM][0x40], 0x204);
-	return (PROCNUM == ARMCPU_ARM9)? (exmemcnt & EXMEMCNT_MASK_SLOT2_ARM7):
-									!(exmemcnt & EXMEMCNT_MASK_SLOT2_ARM7);
+	return (PROCNUM == ARMCPU_ARM9) ? (exmemcnt & EXMEMCNT_MASK_SLOT2_ARM7) : !(exmemcnt & EXMEMCNT_MASK_SLOT2_ARM7);
 }
 
 template <u8 PROCNUM, typename T>
 bool slot2_write(u32 addr, T val)
 {
-	if (!isSlot2(addr)) return false;
-	if (skipSlot2Data<PROCNUM>()) return true;
+	if (!isSlot2(addr))
+		return false;
+	if (skipSlot2Data<PROCNUM>())
+		return true;
 
 	switch (sizeof(T))
 	{
-		case sizeof(u8) : slot2_device->writeByte(PROCNUM, addr, val); break;
-		case sizeof(u16): slot2_device->writeWord(PROCNUM, addr, val); break;
-		case sizeof(u32): slot2_device->writeLong(PROCNUM, addr, val); break;
+	case sizeof(u8):
+		slot2_device->writeByte(PROCNUM, addr, val);
+		break;
+	case sizeof(u16):
+		slot2_device->writeWord(PROCNUM, addr, val);
+		break;
+	case sizeof(u32):
+		slot2_device->writeLong(PROCNUM, addr, val);
+		break;
 	}
 	return true;
 }
@@ -315,31 +326,43 @@ bool slot2_write(u32 addr, T val)
 template <u8 PROCNUM, typename T>
 bool slot2_read(u32 addr, T &val)
 {
-	if (!isSlot2(addr)) return false;
-	if (skipSlot2Data<PROCNUM>()) { val = 0; return true; }
+	if (!isSlot2(addr))
+		return false;
+	if (skipSlot2Data<PROCNUM>())
+	{
+		val = 0;
+		return true;
+	}
 
 	switch (sizeof(T))
 	{
-		case sizeof(u8) : val = slot2_device->readByte(PROCNUM, addr); break;
-		case sizeof(u16): val = slot2_device->readWord(PROCNUM, addr); break;
-		case sizeof(u32): val = slot2_device->readLong(PROCNUM, addr); break;
-		default: val = 0; break;
+	case sizeof(u8):
+		val = slot2_device->readByte(PROCNUM, addr);
+		break;
+	case sizeof(u16):
+		val = slot2_device->readWord(PROCNUM, addr);
+		break;
+	case sizeof(u32):
+		val = slot2_device->readLong(PROCNUM, addr);
+		break;
+	default:
+		val = 0;
+		break;
 	}
 
 	return true;
 }
 
-template bool slot2_write<0, u8> (u32 addr, u8  val);
+template bool slot2_write<0, u8>(u32 addr, u8 val);
 template bool slot2_write<0, u16>(u32 addr, u16 val);
 template bool slot2_write<0, u32>(u32 addr, u32 val);
-template bool slot2_write<1, u8> (u32 addr, u8  val);
+template bool slot2_write<1, u8>(u32 addr, u8 val);
 template bool slot2_write<1, u16>(u32 addr, u16 val);
 template bool slot2_write<1, u32>(u32 addr, u32 val);
 
-template bool slot2_read<0, u8> (u32 addr, u8  &val);
+template bool slot2_read<0, u8>(u32 addr, u8 &val);
 template bool slot2_read<0, u16>(u32 addr, u16 &val);
 template bool slot2_read<0, u32>(u32 addr, u32 &val);
-template bool slot2_read<1, u8> (u32 addr, u8  &val);
+template bool slot2_read<1, u8>(u32 addr, u8 &val);
 template bool slot2_read<1, u16>(u32 addr, u16 &val);
 template bool slot2_read<1, u32>(u32 addr, u32 &val);
-

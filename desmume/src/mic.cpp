@@ -31,14 +31,15 @@
 #define MIC_BUFFER_SIZE (sizeof(u8) * MIC_MAX_BUFFER_SAMPLES)
 #define NUM_INTERNAL_NOISE_SAMPLES 32
 
-static u8 *micSampleBuffer = NULL; // Pointer to the internal sample buffer.
-static u8 *micReadPosition = NULL; // Pointer to the read position of the internal sample buffer.
-static u8 *micWritePosition = NULL; // Pointer to the write position of the internal sample buffer.
+static u8 *micSampleBuffer = NULL;		// Pointer to the internal sample buffer.
+static u8 *micReadPosition = NULL;		// Pointer to the read position of the internal sample buffer.
+static u8 *micWritePosition = NULL;		// Pointer to the write position of the internal sample buffer.
 static unsigned int micBufferFillCount; // The number of readable samples in the internal sample buffer.
 
 static void Mic_BufferClear(void)
 {
-	if (micSampleBuffer == NULL) {
+	if (micSampleBuffer == NULL)
+	{
 		return;
 	}
 
@@ -53,7 +54,8 @@ BOOL Mic_Init(void)
 	BOOL result = FALSE;
 
 	u8 *newBuffer = (u8 *)malloc(MIC_BUFFER_SIZE);
-	if (newBuffer == NULL) {
+	if (newBuffer == NULL)
+	{
 		return result;
 	}
 
@@ -96,13 +98,15 @@ static u8 Mic_DefaultBufferRead(void)
 {
 	u8 theSample = MIC_NULL_SAMPLE_VALUE;
 
-	if (micSampleBuffer == NULL) {
+	if (micSampleBuffer == NULL)
+	{
 		return theSample;
 	}
 
 	theSample = *micReadPosition;
 
-	if (Mic_IsBufferEmpty()) {
+	if (Mic_IsBufferEmpty())
+	{
 		return theSample;
 	}
 
@@ -110,27 +114,32 @@ static u8 Mic_DefaultBufferRead(void)
 	micBufferFillCount--;
 
 	// Move the pointer back to start if we reach the end of the memory block.
-	if (micReadPosition >= (micSampleBuffer + MIC_BUFFER_SIZE)) {
+	if (micReadPosition >= (micSampleBuffer + MIC_BUFFER_SIZE))
+	{
 		micReadPosition = micSampleBuffer;
 	}
 
 	return theSample;
 }
 
+/*
+
 u8 Mic_ReadSample(void)
 {
 	// All mic modes other than Physical must have the mic hotkey pressed in order
 	// to work.
-	if (CommonSettings.micMode != TCommonSettings::Physical && !Mic_GetActivate()) {
+	if (!Mic_GetActivate()) {
 		return MIC_NULL_SAMPLE_VALUE;
 	}
 
-	return Mic_DefaultBufferRead();
+	return Mic_GenerateSine();
 }
+*/
 
 static void Mic_DefaultBufferWrite(u8 theSample)
 {
-	if (micSampleBuffer == NULL || Mic_IsBufferFull()) {
+	if (micSampleBuffer == NULL || Mic_IsBufferFull())
+	{
 		return;
 	}
 
@@ -139,7 +148,8 @@ static void Mic_DefaultBufferWrite(u8 theSample)
 	micBufferFillCount++;
 
 	// Move the pointer back to start if we reach the end of the memory block.
-	if (micWritePosition >= (micSampleBuffer + MIC_BUFFER_SIZE)) {
+	if (micWritePosition >= (micSampleBuffer + MIC_BUFFER_SIZE))
+	{
 		micWritePosition = micSampleBuffer;
 	}
 }
@@ -147,13 +157,13 @@ static void Mic_DefaultBufferWrite(u8 theSample)
 static u8 Mic_GenerateInternalNoiseSample(void)
 {
 	const u8 noiseSample[NUM_INTERNAL_NOISE_SAMPLES] =
-	{
-		0xFC, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xF5, 0xFF, 0xFF, 0xFF, 0xFF, 0x8E, 0xFF, 
-		0xF4, 0xE1, 0xBF, 0x9A, 0x71, 0x58, 0x5B, 0x5F, 0x62, 0xC2, 0x25, 0x05, 0x01, 0x01, 0x01, 0x01
-	};
+		{
+			0xFC, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xF5, 0xFF, 0xFF, 0xFF, 0xFF, 0x8E, 0xFF,
+			0xF4, 0xE1, 0xBF, 0x9A, 0x71, 0x58, 0x5B, 0x5F, 0x62, 0xC2, 0x25, 0x05, 0x01, 0x01, 0x01, 0x01};
 	static unsigned int i = 0;
 
-	if (++i >= NUM_INTERNAL_NOISE_SAMPLES) {
+	if (++i >= NUM_INTERNAL_NOISE_SAMPLES)
+	{
 		i = 0;
 	}
 
@@ -172,25 +182,33 @@ static u8 Mic_GenerateNullSample(void)
 
 void Mic_DoNoise(BOOL noise)
 {
-	u8 (*generator) (void) = NULL;
+	u8 (*generator)(void) = NULL;
 
-	if (micSampleBuffer == NULL) {
+	if (micSampleBuffer == NULL)
+	{
 		return;
 	}
 
-	if (!noise) {
+	if (!noise)
+	{
 		generator = &Mic_GenerateNullSample;
-	} else if (CommonSettings.micMode == TCommonSettings::InternalNoise) {
+	}
+	else if (CommonSettings.micMode == TCommonSettings::InternalNoise)
+	{
 		generator = &Mic_GenerateInternalNoiseSample;
-	} else if (CommonSettings.micMode == TCommonSettings::Random) {
+	}
+	else if (CommonSettings.micMode == TCommonSettings::Random)
+	{
 		generator = &Mic_GenerateWhiteNoiseSample;
 	}
 
-	if (generator == NULL) {
+	if (generator == NULL)
+	{
 		return;
 	}
 
-	while (micBufferFillCount < MIC_MAX_BUFFER_SAMPLES) {
+	while (micBufferFillCount < MIC_MAX_BUFFER_SAMPLES)
+	{
 		Mic_DefaultBufferWrite(generator());
 	}
 }

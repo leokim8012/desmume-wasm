@@ -323,7 +323,7 @@ void sthread_setname(sthread_t *thread, const char *name)
    // any thread. At the time of this writing (2021/08/30), there is no way to
    // set the thread name from a different thread when running an Apple OS.
 #if !defined(USE_WIN32_THREADS) && !defined(__APPLE__)
-   pthread_setname_np(thread->id, name);
+   // pthread_setname_np(thread->id, name);
 #endif
 }
 
