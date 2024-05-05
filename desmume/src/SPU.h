@@ -72,7 +72,6 @@ struct SoundInterface_struct
 extern SoundInterface_struct SNDDummy;
 extern SoundInterface_struct SNDFile;
 extern int SPU_currentCoreNum;
-extern double samples_per_hline;
 
 struct channel_struct
 {

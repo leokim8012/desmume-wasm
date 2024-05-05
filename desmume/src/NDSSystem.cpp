@@ -2211,7 +2211,10 @@ void NDS_debug_step()
 template <bool FORCE>
 void NDS_exec(s32 nb)
 {
-	GDBSTUB_MUTEX_LOCK();
+
+#ifdef GDB_STUB
+	gdbstub_mutex_lock();
+#endif
 
 	LagFrameFlag = 1;
 
@@ -2260,7 +2263,9 @@ void NDS_exec(s32 nb)
 
 			// break out once per frame
 			if (sequencer.nds_vblankEnded)
+			{
 				break;
+			}
 			// it should be benign to execute execHardware in the next frame,
 			// since there won't be anything for it to do (everything should be scheduled in the future)
 

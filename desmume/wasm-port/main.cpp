@@ -146,8 +146,8 @@ extern "C"
 
     GPU->Change3DRendererByID(RENDERID_SOFTRASTERIZER);
     cheatsExport = new CHEATSEXPORT();
-    printf("wasm ready.\n");
-    EM_ASM(wasmReady(););
+    // printf("wasm ready.\n");
+    // EM_ASM(wasmReady(););
   }
 
   void *prepareRomBuffer(int rl)
